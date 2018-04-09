@@ -279,9 +279,16 @@ def worker_run_loop(run_id):
                                                   generation_limit=config['children_per_generation'])
                 parent_box = session.query(Box).get(parent_id)
 
-                mutation_strength_key = [run_id, gen] + parent_box.bin
-                mutation_strength = MutationStrength.get_prior(*mutation_strength_key).clone().strength
-                
+                if config['mutation_scheme'] == 'random':
+                    mutation_strength = 1.
+                elif config['mutation_scheme'] == 'flat':
+                    mutation_strength = config['initial_mutation_strength']
+                elif config['mutation_scheme'] == 'adaptive':
+                    mutation_strength_key = [run_id, gen] + parent_box.bin
+                    mutation_strength = MutationStrength.get_prior(*mutation_strength_key).clone().strength
+                else:
+                    print("REVISE CONFIG FILE, UNSUPPORTED MUTATION SCHEME.")
+
                 # mutate material
                 box = mutate_box(parent_box, mutation_strength, gen)
 
@@ -295,7 +302,8 @@ def worker_run_loop(run_id):
                 session.add(box)
 
             # calculate mutation strengths for all bins
-            if box.generation_index == config['children_per_generation'] - 1 and gen > 0:
+            if config['mutation_scheme'] == 'adaptive':
+                if box.generation_index == config['children_per_generation'] - 1 and gen > 0:
                     parent_ids = get_all_parent_ids(run_id, gen)
                     print_block('CALCULATING MUTATION STRENGTHS')
                     ms_bins = []

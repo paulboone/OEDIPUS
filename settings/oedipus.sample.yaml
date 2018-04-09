@@ -1,4 +1,6 @@
 children_per_generation: 100
+number_of_generations: 3000
 initial_mutation_strength: 0.2
 number_of_convergence_bins: 40
+mutation_scheme: 'random'
 convergence_cutoff_criteria: -0.05
