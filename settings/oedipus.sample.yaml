@@ -1,0 +1,4 @@
+children_per_generation: 100
+initial_mutation_strength: 0.2
+number_of_convergence_bins: 40
+convergence_cutoff_criteria: -0.05
