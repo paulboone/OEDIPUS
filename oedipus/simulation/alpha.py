@@ -8,6 +8,6 @@ def run(box):
 
     """
     results = {}
-    results['alpha'] = box.x ** 4
+    results['alpha'] = (box.x + box.y + box.z) / 3
 
     return results

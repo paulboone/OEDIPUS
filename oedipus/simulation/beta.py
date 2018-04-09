@@ -8,6 +8,6 @@ def run(box):
 
     """
     results = {}
-    results['beta'] = (box.y * box.z) ** 2
+    results['beta'] = box.x * box.y * box.z
 
     return results
