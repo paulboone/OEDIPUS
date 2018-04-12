@@ -3,6 +3,7 @@ import sys
 from math import sqrt
 from datetime import datetime
 from collections import Counter
+import random
 
 import numpy as np
 from sqlalchemy.sql import func, or_
@@ -97,7 +98,6 @@ def select_parent(run_id, max_generation, generation_limit):
             Box.generation_index < generation_limit,
         ) \
         .group_by(*queries).all()[1:]
-
     bins = []
     for i in bins_and_counts:
         some_bin = {}
@@ -109,7 +109,6 @@ def select_parent(run_id, max_generation, generation_limit):
     weights = [ total / float(i[0]) for i in bins_and_counts ]
     normalized_weights = [ weight / sum(weights) for weight in weights ]
     parent_bin = np.random.choice(bins, p = normalized_weights)
-    
     parent_queries = [i == parent_bin[i] for i in queries]
     parent_query = session \
         .query(Box.id) \
@@ -133,7 +132,7 @@ def run_all_simulations(box):
 
     results = simulation.beta.run(box)
     box.update_from_dict(results)
-    box.alpha_bin = calc_bin(box.beta, 0., 1., config['number_of_convergence_bins'])
+    box.beta_bin = calc_bin(box.beta, 0., 1., config['number_of_convergence_bins'])
 
 def get_all_parent_ids(run_id, generation):
     return [e[0] for e in session.query(Box.parent_id) \
@@ -283,6 +282,8 @@ def worker_run_loop(run_id):
                     mutation_strength = 1.
                 elif config['mutation_scheme'] == 'flat':
                     mutation_strength = config['initial_mutation_strength']
+                elif config['mutation_scheme'] == 'hybrid':
+                    mutation_strength = random.choice([1., config['initial_mutation_strength']])
                 elif config['mutation_scheme'] == 'adaptive':
                     mutation_strength_key = [run_id, gen] + parent_box.bin
                     mutation_strength = MutationStrength.get_prior(*mutation_strength_key).clone().strength
