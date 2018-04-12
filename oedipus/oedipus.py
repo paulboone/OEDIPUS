@@ -15,8 +15,8 @@ import yaml
 import oedipus
 from oedipus import config
 from oedipus.db import engine, session, Box, MutationStrength
-from oedipus.box_files import generate_box, mutate_box
 from oedipus import simulation
+from oedipus import create_boxes
 
 def boxes_in_generation(run_id, generation):
     """Count number of materials in a generation.
@@ -65,60 +65,6 @@ def calc_bin(value, bound_min, bound_max, bins):
     assigned_bin = min(assigned_bin, bins-1)
     assigned_bin = max(assigned_bin, 0)
     return int(assigned_bin)
-
-def select_parent(run_id, max_generation, generation_limit):
-    """Use bin-counts to preferentially select a list of 'rare' parents.
-
-    Args:
-        run_id (str): identification string for run.
-        max_generation (int): latest generation to include when counting number
-            of materials ub each bin.
-        generation_limit (int): number of materials to query in each generation
-            (as materials are added to database they are assigned an index
-            within the generation to bound the number of materials in each
-            generation).
-
-    Returns:
-        The material id(int) corresponding to some parent-material selected
-        from database with a bias favoring materials in bins with the lowest
-        counts.
-
-    """
-    queries = [Box.alpha_bin, Box.beta_bin]
-
-    # Each bin is counted...
-    bins_and_counts = session \
-        .query(
-            func.count(Box.id),
-            *queries
-        ) \
-        .filter(
-            Box.run_id == run_id,
-            Box.generation <= max_generation,
-            Box.generation_index < generation_limit,
-        ) \
-        .group_by(*queries).all()[1:]
-    bins = []
-    for i in bins_and_counts:
-        some_bin = {}
-        for j in range(len(queries)):
-            some_bin[queries[j]] = i[j + 1]
-        bins.append(some_bin)
-    total = sum([i[0] for i in bins_and_counts])
-    # ...then assigned a weight.
-    weights = [ total / float(i[0]) for i in bins_and_counts ]
-    normalized_weights = [ weight / sum(weights) for weight in weights ]
-    parent_bin = np.random.choice(bins, p = normalized_weights)
-    parent_queries = [i == parent_bin[i] for i in queries]
-    parent_query = session \
-        .query(Box.id) \
-        .filter(
-            Box.run_id == run_id,
-            *parent_queries,
-            Box.generation <= max_generation,
-            Box.generation_index < generation_limit,).all()
-    potential_parents = [i[0] for i in parent_query]
-    return int(np.random.choice(potential_parents))
 
 def run_all_simulations(box):
     """
@@ -268,30 +214,13 @@ def worker_run_loop(run_id):
         size_of_generation = config['children_per_generation']
 
         while boxes_in_generation(run_id, gen) < size_of_generation:
-            if gen == 0:
+            if gen == 0 or config['mutation_scheme'] == 'random':
                 print("writing new seed...")
-                box = generate_box(run_id)
+                box = create_boxes.generate.new_box(run_id, gen)
             
             else:
-                print("selecting a parent / running retests on parent / mutating / simulating")
-                parent_id = select_parent(run_id, max_generation=(gen - 1),
-                                                  generation_limit=config['children_per_generation'])
-                parent_box = session.query(Box).get(parent_id)
-
-                if config['mutation_scheme'] == 'random':
-                    mutation_strength = 1.
-                elif config['mutation_scheme'] == 'flat':
-                    mutation_strength = config['initial_mutation_strength']
-                elif config['mutation_scheme'] == 'hybrid':
-                    mutation_strength = random.choice([1., config['initial_mutation_strength']])
-                elif config['mutation_scheme'] == 'adaptive':
-                    mutation_strength_key = [run_id, gen] + parent_box.bin
-                    mutation_strength = MutationStrength.get_prior(*mutation_strength_key).clone().strength
-                else:
-                    print("REVISE CONFIG FILE, UNSUPPORTED MUTATION SCHEME.")
-
-                # mutate material
-                box = mutate_box(parent_box, mutation_strength, gen)
+                print("mutating materials...")
+                box = create_boxes.mutate.new_box(run_id, gen)
 
             run_all_simulations(box)
             session.add(box)
