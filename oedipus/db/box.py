@@ -37,7 +37,6 @@ class Box(Base):
     uuid = Column(String(40))
     parent_id = Column(Integer)                            # dimm.
     generation = Column(Integer)                           # generation#
-    generation_index = Column(Integer)                     # index order of row in generation
 
     # structural data
     x = Column(Float)

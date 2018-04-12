@@ -146,9 +146,8 @@ def calculate_mutation_strength(run_id, generation, mutation_strength_bin):
     mutation_strength = session.query(MutationStrength).get(mutation_strength_key)
 
     if mutation_strength:
-        print("Mutation strength already calculated for this bin and generation.")
+        pass
     else:
-        print("Calculating mutation strength...")
         mutation_strength = MutationStrength.get_prior(*mutation_strength_key).clone()
         mutation_strength.generation = generation
 
@@ -159,7 +158,7 @@ def calculate_mutation_strength(run_id, generation, mutation_strength_bin):
             elif fraction_in_parent_bin > 0.5 and mutation_strength.strength + 0.05 < 1:
                 mutation_strength.strength += 0.05
         except ZeroDivisionError:
-            print("No prior generation materials in this bin with children.")
+            pass
 
         try:
             session.add(mutation_strength)
@@ -186,10 +185,7 @@ def evaluate_convergence(run_id, generation):
 
     bin_counts = session \
         .query(func.count(Box.id)) \
-        .filter(
-            Box.run_id == run_id, Box.generation < generation,
-            Box.generation_index < config['children_per_generation']
-        ) \
+        .filter(Box.run_id == run_id, Box.generation < generation) \
         .group_by(*query_group).all()
     bin_counts = [i[0] for i in bin_counts]    # convert SQLAlchemy result to list
     variance = sqrt( sum([(i - (sum(bin_counts) / len(bin_counts)))**2 for i in bin_counts]) / len(bin_counts))
@@ -199,6 +195,15 @@ def evaluate_convergence(run_id, generation):
 
 def print_block(string):
     print('{0}\n{1}\n{0}'.format('=' * 80, string))
+
+def calculate_all_mutation_strengths(run_id, gen):
+    parent_ids = get_all_parent_ids(run_id, gen)
+    ms_bins = []
+    for parent_id in parent_ids:
+        parent_bin = session.query(Box).get(parent_id).bin
+        if parent_bin not in ms_bins:
+            calculate_mutation_strength(run_id, gen + 1, parent_bin)
+        ms_bins.append(parent_bin)
 
 def worker_run_loop(run_id):
     """
@@ -211,44 +216,25 @@ def worker_run_loop(run_id):
     converged = False
     while not converged:
         print_block('GENERATION {}'.format(gen))
-        size_of_generation = config['children_per_generation']
+        
+        # create boxes
+        if gen == 0 or config['mutation_scheme'] == 'random':
+            boxes = create_boxes.generate.new_boxes(run_id, gen)
+        else:
+            boxes = create_boxes.mutate.new_boxes(run_id, gen)
 
-        while boxes_in_generation(run_id, gen) < size_of_generation:
-            if gen == 0 or config['mutation_scheme'] == 'random':
-                print("writing new seed...")
-                box = create_boxes.generate.new_box(run_id, gen)
-            
-            else:
-                print("mutating materials...")
-                box = create_boxes.mutate.new_box(run_id, gen)
-
+        # simulate properties
+        for box in boxes:
             run_all_simulations(box)
             session.add(box)
-            session.commit()
+        session.commit()
 
-            box.generation_index = box.calculate_generation_index()
-            if box.generation_index < config['children_per_generation']:
-                print_block('ADDING MATERIAL {}'.format(box.uuid))
-                session.add(box)
+        # calculate mutation strengths, if adaptive
+        if config['mutation_scheme'] == 'adaptive' and gen > 0:
+            calculate_all_mutation_strengths(run_id, gen)
 
-            # calculate mutation strengths for all bins
-            if config['mutation_scheme'] == 'adaptive':
-                if box.generation_index == config['children_per_generation'] - 1 and gen > 0:
-                    parent_ids = get_all_parent_ids(run_id, gen)
-                    print_block('CALCULATING MUTATION STRENGTHS')
-                    ms_bins = []
-                    for parent_id in parent_ids:
-                        parent_bin = session.query(Box).get(parent_id).bin
-                        if parent_bin not in ms_bins:
-                            print('Calculating bin-mutation-strength for bin : {0}' \
-                                    .format(parent_bin))
-                            calculate_mutation_strength(run_id, gen + 1, parent_bin)
-                        ms_bins.append(parent_bin)
-            else:
-                # delete excess rows
-                # session.delete(material)
-                pass
-            session.commit()
-            sys.stdout.flush()
+        # evaluate convergence
+        if gen > 0:
+            converged = evaluate_convergence(run_id, gen)
+        
         gen += 1
-        converged = evaluate_convergence(run_id, gen)
