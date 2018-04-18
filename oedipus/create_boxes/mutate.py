@@ -92,10 +92,14 @@ def new_boxes(run_id, gen):
         elif config['mutation_scheme'] == 'flat':
             mutation_strength = config['initial_mutation_strength']
         elif config['mutation_scheme'] == 'hybrid':
-            mutation_strength = random.choice([1., config['initial_mutation_strength']])
+            mutation_strength = np.random.choice([1., config['initial_mutation_strength']])
         elif config['mutation_scheme'] == 'adaptive':
             mutation_strength_key = [run_id, gen] + parent_box.bin
             mutation_strength = MutationStrength.get_prior(*mutation_strength_key).clone().strength
+        elif config['mutation_scheme'] == 'hybrid_adaptive':
+            mutation_strength_key = [run_id, gen] + parent_box.bin
+            ms = MutationStrength.get_prior(*mutation_strength_key).clone().strength
+            mutation_strength = np.random.choice([1., ms])
         else:
             print("REVISE CONFIG FILE, UNSUPPORTED MUTATION SCHEME.")
     

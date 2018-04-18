@@ -230,7 +230,7 @@ def worker_run_loop(run_id):
         session.commit()
 
         # calculate mutation strengths, if adaptive
-        if config['mutation_scheme'] == 'adaptive' and gen > 0:
+        if 'adaptive' in config['mutation_scheme'] and gen > 0:
             calculate_all_mutation_strengths(run_id, gen)
 
         # evaluate convergence
