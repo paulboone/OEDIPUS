@@ -1,5 +1,6 @@
 import sys
 from random import random
+from math import sqrt
 
 import numpy as np
 from sqlalchemy.sql import text
@@ -108,7 +109,7 @@ def calculate_all_mutation_strengths(run_id, gen, initial_mutation_strength):
                     initial_mutation_strength)
         ms_bins.append(parent_bin)
 
-def select_parent(run_id, max_generation, generation_limit):
+def smallest_bin_selection(run_id, max_generation, children_per_generation):
     """Use bin-counts to preferentially select a list of 'rare' parents.
 
     Args:
@@ -157,6 +158,18 @@ def select_parent(run_id, max_generation, generation_limit):
     potential_parents = [i[0] for i in parent_query]
     return int(np.random.choice(potential_parents))
 
+def center_of_mass_selection(run_id, max_generation, children_per_generation):
+    filters = [Box.run_id == run_id, Box.generation <= max_generation]
+    ids = [e[0] for e in session.query(Box.id).filter(*filters).all()]
+    alpha = [e[0] for e in session.query(Box.alpha).filter(*filters).all()]
+    beta = [e[0] for e in session.query(Box.beta).filter(*filters).all()]
+    alpha_bar = sum(alpha) / len(alpha)
+    beta_bar = sum(beta) / len(beta)
+    distance = [sqrt((alpha[e] - alpha_bar) ** 2 + (beta[e] - beta_bar) ** 2) for e in range(len(alpha))]
+    weights = [e / sum(distance) for e in distance]
+    normalized_weights = [e / sum(weights) for e in weights]
+    return int(np.random.choice(ids, p = normalized_weights))
+
 def perturb_length(x, ms):
     dx = ms * (random() - x)
     return x + dx
@@ -190,8 +203,22 @@ def new_boxes(run_id, gen, children_per_generation, config):
 
     boxes = []
     for i in range(children_per_generation):
-        parent_id = select_parent(run_id, max_generation=(gen - 1),
-                                generation_limit=children_per_generation)
+        if config['selection_scheme'] == 'smallest_bin':
+            parent_id = smallest_bin_selection(run_id, gen - 1,
+                children_per_generation)
+        elif config['selection_scheme'] == 'center_of_mass':
+            parent_id = center_of_mass_selection(run_id, gen - 1,
+                children_per_generation)
+        elif config['selection_scheme'] == 'hybrid':
+            select = random()
+            if select < 0.5:
+                parent_id = smallest_bin_selection(run_id, gen - 1,
+                    children_per_generation)
+            else:
+                parent_id = center_of_mass_selection(run_id, gen - 1,
+                    children_per_generation)
+        else:
+            print('REVISE CONFIG, UNSUPPORTED SELECTION SCHEME.')
         parent_box = session.query(Box).get(parent_id)
     
         if config['mutation_scheme'] == 'flat':
@@ -202,7 +229,7 @@ def new_boxes(run_id, gen, children_per_generation, config):
             mutation_strength_key = [run_id, gen, *parent_box.bin,
                     config['initial_mutation_strength']]
             mutation_strength = MutationStrength.get_prior(*mutation_strength_key).clone().strength
-        elif config['mutation_scheme'] == 'hybrid-adaptive':
+        elif config['mutation_scheme'] == 'hybrid_adaptive':
             mutation_strength_key = [run_id, gen, *parent_box.bin,
                     config['initial_mutation_strength']]
             ms = MutationStrength.get_prior(*mutation_strength_key).clone().strength

@@ -5,4 +5,5 @@ number_of_generations: 3000
 children_per_generation: 100
 mutate:
   initial_mutation_strength: 0.2
-  mutation_scheme: 'hybrid-adaptive' 
+  mutation_scheme: 'hybrid_adaptive'
+  selection_scheme: 'smallest_bin'
