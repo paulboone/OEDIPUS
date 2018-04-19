@@ -1,6 +1,8 @@
-children_per_generation: 100
-number_of_generations: 3000
-initial_mutation_strength: 0.2
-number_of_convergence_bins: 40
-mutation_scheme: 'random'
+generator_type: 'mutate'
 convergence_cutoff_criteria: -0.05
+number_of_convergence_bins: 40
+number_of_generations: 3000
+children_per_generation: 100
+mutate:
+  initial_mutation_strength: 0.2
+  mutation_scheme: 'hybrid-adaptive' 

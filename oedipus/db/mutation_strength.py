@@ -3,7 +3,6 @@ import os
 import yaml
 from sqlalchemy import Column, ForeignKey, Integer, String, Float, Boolean, PrimaryKeyConstraint
 
-from oedipus import config
 from oedipus.db import Base, session
 
 class MutationStrength(Base):
@@ -36,7 +35,7 @@ class MutationStrength(Base):
         self.strength = strength
 
     @classmethod
-    def get_prior(cls, run_id, generation, alpha_bin, beta_bin):
+    def get_prior(cls, run_id, generation, alpha_bin, beta_bin, initial_mutation_strength):
         """
         Looks for the most recent mutation_strength row. If a row doesn't exist
         for this bin, the default value is used from the configuration file.
@@ -64,4 +63,4 @@ class MutationStrength(Base):
         if ms:
             return ms
         else:
-            return MutationStrength(run_id, generation, alpha_bin, beta_bin, config['initial_mutation_strength'])
+            return MutationStrength(run_id, generation, alpha_bin, beta_bin, initial_mutation_strength)

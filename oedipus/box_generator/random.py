@@ -1,9 +1,8 @@
 from random import random
 
-from oedipus import config
 from oedipus.db import Box
 
-def new_boxes(run_id, gen):
+def new_boxes(run_id, gen, children_per_generation, config):
     """
     
     Args:
@@ -13,7 +12,7 @@ def new_boxes(run_id, gen):
  
     """
     boxes = []
-    for i in range(config['children_per_generation']):
+    for i in range(children_per_generation):
         box = Box(run_id)
         box.generation  = gen
         [box.x, box.y, box.z] = [random(), random(), random()]
