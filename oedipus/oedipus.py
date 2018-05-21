@@ -102,10 +102,7 @@ def oedipus(config_path):
     config = load_config_file(config_path)
     run_id = datetime.now().isoformat()
 
-    gen = 0
-    converged = False
-
-    while not converged:
+    for gen in range(config['number_of_generations']):
         print_block('{} GENERATION {}'.format(run_id, gen))
         
         # create boxes, first generation is always random
@@ -124,9 +121,3 @@ def oedipus(config_path):
             run_all_simulations(box, config['number_of_convergence_bins'])
             session.add(box)
         session.commit()
-
-        # evaluate convergence
-        if gen > 0:
-            converged = evaluate_convergence(run_id, gen, config['convergence_cutoff_criteria'])
-        
-        gen += 1
