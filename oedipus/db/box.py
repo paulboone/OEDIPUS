@@ -33,10 +33,10 @@ class Box(Base):
     __tablename__ = 'boxes'
     # COLUMN                                                 UNITS
     id = Column(Integer, primary_key=True)                 # dimm.
-    run_id = Column(String(50))                            # dimm.
+    run_id = Column(String(50), index=True)                # dimm.
     uuid = Column(String(40))
     parent_id = Column(Integer)                            # dimm.
-    generation = Column(Integer)                           # generation#
+    generation = Column(Integer, index=True)               # generation#
 
     # structural data
     x = Column(Float)
@@ -44,8 +44,8 @@ class Box(Base):
     z = Column(Float)
 
     # calculated properties
-    alpha = Column(Float)
-    beta = Column(Float)
+    alpha = Column(Float, index=True)
+    beta = Column(Float, index=True)
 
     # bins
     alpha_bin = Column(Integer)
