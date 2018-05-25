@@ -108,7 +108,7 @@ def oedipus(config_path):
         # create boxes, first generation is always random
         if gen == 0 or config['generator_type'] == 'random':
             boxes = box_generator.random.new_boxes(run_id, gen,
-                    config['children_per_generation'], {})
+                    config['children_per_generation'], config)
         elif config['generator_type'] == 'mutate':
             boxes = box_generator.mutate.new_boxes(run_id, gen,
                     config['children_per_generation'], config['mutate'])

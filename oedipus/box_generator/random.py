@@ -13,7 +13,10 @@ def new_boxes(run_id, gen, children_per_generation, config):
     """
     boxes = []
     for i in range(children_per_generation):
-        box = Box(run_id)
+        if config['generator_type'] == 'mutate':
+            box = Box(config['mutate']['initial_mutation_strength'], run_id)
+        else:
+            box = Box(0.0, run_id)
         box.generation  = gen
         [box.x, box.y, box.z] = [random(), random(), random()]
         boxes.append(box)

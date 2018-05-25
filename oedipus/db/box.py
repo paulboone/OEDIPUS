@@ -47,11 +47,14 @@ class Box(Base):
     alpha = Column(Float, index=True)
     beta = Column(Float, index=True)
 
+    # mutation strength
+    mutation_strength = Column(Float)
+
     # bins
     alpha_bin = Column(Integer)
     beta_bin = Column(Integer)
 
-    def __init__(self, run_id=None, ):
+    def __init__(self, initial_mutation_strength, run_id=None):
         """Init material-row.
 
         Args:
@@ -63,6 +66,7 @@ class Box(Base):
         """
         self.uuid = str(uuid.uuid4())
         self.run_id = run_id
+        self.mutation_strength = initial_mutation_strength
 
     @property
     def bin(self):
