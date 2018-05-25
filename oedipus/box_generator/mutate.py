@@ -221,9 +221,9 @@ def new_boxes(run_id, gen, children_per_generation, config):
             print('REVISE CONFIG, UNSUPPORTED SELECTION SCHEME.')
         parent_box = session.query(Box).get(parent_id)
     
-        if config['mutation_scheme'] == 'flat':
+        if config['mutation_scheme'] in ['flat', 'adaptive_binning']:
             mutation_strength = config['initial_mutation_strength']
-        elif config['mutation_scheme'] == 'hybrid':
+        elif config['mutation_scheme'] in ['hybrid', 'hybrid_adaptive_binning']:
             mutation_strength = np.random.choice([1., config['initial_mutation_strength']])
         elif config['mutation_scheme'] == 'adaptive':
             mutation_strength_key = [run_id, gen, *parent_box.bin,

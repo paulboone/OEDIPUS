@@ -23,6 +23,7 @@ session = sessionmaker(bind=engine)()
 from oedipus.db.base import Base
 from oedipus.db.box import Box
 from oedipus.db.mutation_strength import MutationStrength
+from oedipus.db.convergence import Convergence
 
 # Create tables in the engine, if they don't exist already.
 Base.metadata.create_all(engine)
