@@ -108,7 +108,9 @@ def oedipus(config_path):
 
     total_bins = int(config['number_of_convergence_bins']) ** 2
 
-    next_benchmark = 0.5
+    verbose = config['verbose'] if 'verbose' in config else False
+    benchmarks = config['benchmarks']
+    next_benchmark = benchmarks.pop(0)
 
     for gen in range(config['number_of_generations']):
         # create boxes, first generation is always random
@@ -131,7 +133,12 @@ def oedipus(config_path):
         # evaluate algorithm effectiveness
         bin_count = evaluate_bin_spread(run_id)
         bin_fraction_explored = bin_count / total_bins
-        print('%s GENERATION %s: %5.2f%%' % (run_id, gen, bin_fraction_explored * 100))
+        if verbose:
+            print('%s GENERATION %s: %5.2f%%' % (run_id, gen, bin_fraction_explored * 100))
         if bin_fraction_explored >= next_benchmark:
             print_block("%5.2f%% exploration accomplished at generation %d" % (bin_fraction_explored * 100, gen))
-            next_benchmark = next_benchmark + (1.0 - next_benchmark) / 2
+            if benchmarks:
+                next_benchmark = benchmarks.pop(0)
+            else:
+                print("Last benchmark reached")
+                break
