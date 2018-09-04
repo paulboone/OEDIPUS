@@ -10,7 +10,6 @@ from sqlalchemy.sql import func, or_
 from sqlalchemy.orm.exc import FlushError
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.sql import text
-import yaml
 
 import oedipus
 from oedipus.files import load_config_file
@@ -71,13 +70,13 @@ def print_block(string):
 
 def evaluate_convergence(run_id, generation, convergence_cutoff_criteria):
     '''Determines convergence by calculating variance of bin-counts.
-    
+
     Args:
         run_id (str): identification string for run.
         generation (int): iteration in bin-mutate-simulate routine.
 
     Returns:
-        bool: True if variance is less than or equal to cutt-off criteria (so
+        bool: True if variance is less than or equal to cut-off criteria (so
             method will continue running).
     '''
     query_group = [Box.alpha_bin, Box.beta_bin]
@@ -92,6 +91,11 @@ def evaluate_convergence(run_id, generation, convergence_cutoff_criteria):
     sys.stdout.flush()
     return variance <= convergence_cutoff_criteria
 
+def evaluate_bin_spread(run_id):
+    bin_counts = session.query(func.count(Box.id)).filter(Box.run_id == run_id). \
+        group_by(Box.alpha_bin, Box.beta_bin).all()
+    return len(bin_counts)
+
 def oedipus(config_path):
     """
     Args:
@@ -102,9 +106,11 @@ def oedipus(config_path):
     config = load_config_file(config_path)
     run_id = datetime.now().isoformat()
 
+    total_bins = int(config['number_of_convergence_bins']) ** 2
+
+    next_benchmark = 0.5
+
     for gen in range(config['number_of_generations']):
-        print_block('{} GENERATION {}'.format(run_id, gen))
-        
         # create boxes, first generation is always random
         if gen == 0 or config['generator_type'] == 'random':
             boxes = box_generator.random.new_boxes(run_id, gen,
@@ -121,3 +127,11 @@ def oedipus(config_path):
             run_all_simulations(box, config['number_of_convergence_bins'])
             session.add(box)
         session.commit()
+
+        # evaluate algorithm effectiveness
+        bin_count = evaluate_bin_spread(run_id)
+        bin_fraction_explored = bin_count / total_bins
+        print('%s GENERATION %s: %5.2f%%' % (run_id, gen, bin_fraction_explored * 100))
+        if bin_fraction_explored >= next_benchmark:
+            print_block("%5.2f%% exploration accomplished at generation %d" % (bin_fraction_explored * 100, gen))
+            next_benchmark = next_benchmark + (1.0 - next_benchmark) / 2
