@@ -20,13 +20,19 @@ def perturb_length(x, ms):
     dx = ms * (random() - x)
     return x + dx
 
-def mutate_box(parent_box, mutation_strength):
-    return ([
-        perturb_length(parent_box[0], mutation_strength),
-        perturb_length(parent_box[1], mutation_strength),
-        perturb_length(parent_box[2], mutation_strength),
-        -1.0, -1.0])
+# def mutate_box(parent_box, mutation_strength):
+#     return ([
+#         perturb_length(parent_box[0], mutation_strength),
+#         perturb_length(parent_box[1], mutation_strength),
+#         perturb_length(parent_box[2], mutation_strength),
+#         -1.0, -1.0])
 
+def mutate_box(parent_box, mutation_strength):
+    child = [parent_box[0], parent_box[1], parent_box[2], -1.0, -1.0]
+    dof = choice([0,1,2])
+    child[dof] = perturb_length(child[dof], mutation_strength)
+    return child
+    
 def choose_parents(num_parents, boxes, output_path=None):
     # calculate convex hull
 
