@@ -136,7 +136,8 @@ def oedipus(config_path):
         if verbose:
             print('%s GENERATION %s: %5.2f%%' % (run_id, gen, bin_fraction_explored * 100))
         if bin_fraction_explored >= next_benchmark:
-            print_block("%5.2f%% exploration accomplished at generation %d" % (bin_fraction_explored * 100, gen))
+            print_block("%s: %5.2f%% exploration accomplished at generation %d" %
+                ('{:%Y-%m-%d %H:%M:%S}'.format(datetime.now()), bin_fraction_explored * 100, gen))
             if benchmarks:
                 next_benchmark = benchmarks.pop(0)
             else:
