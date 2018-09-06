@@ -72,9 +72,9 @@ def oedipus(config_path):
             new_boxes = [[random(), random(), random(), -1.0, -1.0] for _ in range(config['children_per_generation'])]
         elif config['generator_type'] == 'mutate':
             pass
-        elif config['generator_type'] == 'concave_hull':
-            new_boxes = box_generator.concave_hull.new_boxes(gen, config['children_per_generation'],
-                        boxes, config['concave_hull'])
+        elif config['generator_type'] == 'convex_hull':
+            new_boxes = box_generator.convex_hull.new_boxes(gen, config['children_per_generation'],
+                        boxes, config['convex_hull'])
         else:
             print("config['generator_type'] NOT FOUND.")
             break
