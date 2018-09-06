@@ -72,8 +72,6 @@ def oedipus(config_path):
     print("bins", bins)
 
     os.makedirs(config['visualization_output_dir'], exist_ok=True)
-    output_path = os.path.join(config['visualization_output_dir'], "triplot_%d.png" % 0)
-    delaunay_figure(boxes, num_bins, output_path)
 
     for gen in range(1, config['number_of_generations'] + 1):
         if config['generator_type'] == 'random':
@@ -91,10 +89,12 @@ def oedipus(config_path):
         # simulate properties
         run_all_simulations(new_boxes)
         bins = bins.union(calc_bins(new_boxes, num_bins))
-        boxes = np.append(boxes, new_boxes, axis=0)
 
         output_path = os.path.join(config['visualization_output_dir'], "triplot_%d.png" % gen)
-        delaunay_figure(boxes, num_bins, output_path, parents=parents, bins=bins)
+        delaunay_figure(boxes, num_bins, output_path, children=new_boxes, parents=parents, bins=bins,
+                        title="Generation %d: %5.2f%%" % (gen, 100*float(len(bins)) / num_bins ** 2))
+
+        boxes = np.append(boxes, new_boxes, axis=0)
 
         # evaluate algorithm effectiveness
         bin_count = len(bins)

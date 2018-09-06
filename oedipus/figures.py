@@ -6,7 +6,7 @@ from matplotlib.patches import Rectangle
 import numpy as np
 from scipy.spatial import Delaunay
 
-def delaunay_figure(boxes, convergence_bins, output_path, triang=None, parents=[], bins=[]):
+def delaunay_figure(boxes, convergence_bins, output_path, triang=None, children=[], parents=[], bins=[], title=""):
 
     if not triang:
         triang = Delaunay(boxes[:,3:5])
@@ -37,8 +37,8 @@ def delaunay_figure(boxes, convergence_bins, output_path, triang=None, parents=[
     # for p in hull_points:
     #     ax.annotate(i, (p[0], p[1] - 0.01), zorder=30, ha="center", va="top", size=9)
 
-    # plot prior generation
-    ax.plot(boxes[-100:,3], boxes[-100:,4], color='yellow', marker='o', linestyle='None', zorder=12)
+    # plot children
+    ax.plot(children[:,3], children[:,4], color='yellow', marker='o', linestyle='None', zorder=12)
 
     # plot chosen parents with proportional circles and label
     if len(parents) > 0:
@@ -50,5 +50,6 @@ def delaunay_figure(boxes, convergence_bins, output_path, triang=None, parents=[
             if parent_count > 5:
                 ax.annotate(str(int(parent_count)), (x, y), zorder=30, ha="center", va="center", size=9)
 
+    ax.set_title(title)
     fig.savefig(output_path)
     plt.close(fig)
