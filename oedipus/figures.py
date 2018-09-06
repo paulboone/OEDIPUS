@@ -6,7 +6,8 @@ from matplotlib.patches import Rectangle
 import numpy as np
 from scipy.spatial import Delaunay
 
-def delaunay_figure(boxes, convergence_bins, output_path, triang=None, children=[], parents=[], bins=[], title=""):
+def delaunay_figure(boxes, convergence_bins, output_path, triang=None, children=[], parents=[],
+                    bins=[], new_bins=[], title=""):
 
     if not triang:
         triang = Delaunay(boxes[:,3:5])
@@ -28,6 +29,10 @@ def delaunay_figure(boxes, convergence_bins, output_path, triang=None, children=
     bin_rects = [Rectangle((b[0] * dbin, b[1] * dbin), dbin, dbin) for b in bins]
     pc = PatchCollection(bin_rects, facecolor='0.85')
     ax.add_collection(pc)
+
+    new_bin_rects = [Rectangle((b[0] * dbin, b[1] * dbin), dbin, dbin) for b in new_bins]
+    pc2 = PatchCollection(new_bin_rects, facecolor='#B1E0E0')
+    ax.add_collection(pc2)
 
     # plot all points as triangulation
     ax.triplot(boxes[:,3], boxes[:,4], triang.simplices.copy(), 'b-', lw=1)

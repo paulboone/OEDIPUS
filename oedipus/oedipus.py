@@ -88,11 +88,17 @@ def oedipus(config_path):
 
         # simulate properties
         run_all_simulations(new_boxes)
-        bins = bins.union(calc_bins(new_boxes, num_bins))
+        new_bins = set(calc_bins(new_boxes, num_bins)) - bins
+        bins = bins.union(new_bins)
 
         output_path = os.path.join(config['visualization_output_dir'], "triplot_%d.png" % gen)
-        delaunay_figure(boxes, num_bins, output_path, children=new_boxes, parents=parents, bins=bins,
-                        title="Generation %d: %5.2f%%" % (gen, 100*float(len(bins)) / num_bins ** 2))
+        delaunay_figure(boxes, num_bins, output_path, children=new_boxes, parents=parents,
+                        bins=bins, new_bins=new_bins,
+                        title="Generation %d: %d/%d (+%d) %5.2f%% (+%5.2f %%)" %
+                            (gen, len(bins), num_bins ** 2, len(new_bins),
+                            100*float(len(bins)) / num_bins ** 2, 100*float(len(new_bins)) / num_bins ** 2 ))
+
+
 
         boxes = np.append(boxes, new_boxes, axis=0)
 
