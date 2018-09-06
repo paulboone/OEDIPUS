@@ -94,7 +94,7 @@ def oedipus(config_path):
         boxes = np.append(boxes, new_boxes, axis=0)
 
         output_path = os.path.join(config['visualization_output_dir'], "triplot_%d.png" % gen)
-        delaunay_figure(boxes, num_bins, output_path, parents=parents)
+        delaunay_figure(boxes, num_bins, output_path, parents=parents, bins=bins)
 
         # evaluate algorithm effectiveness
         bin_count = len(bins)
