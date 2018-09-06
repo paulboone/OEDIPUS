@@ -1,4 +1,5 @@
-# import os
+from collections import Counter
+import os
 # import sys
 # from math import sqrt
 from datetime import datetime
@@ -6,6 +7,8 @@ from datetime import datetime
 from random import random
 
 import numpy as np
+import matplotlib.pyplot as plt
+from scipy.spatial import Delaunay
 # from sqlalchemy.sql import func, or_
 # from sqlalchemy.orm.exc import FlushError
 # from sqlalchemy.exc import IntegrityError
@@ -17,6 +20,46 @@ from oedipus.files import load_config_file
 # from oedipus import simulation
 from oedipus import box_generator
 
+def delaunay_figure(boxes, convergence_bins, output_path, triang=None, parents=[]):
+
+    if not triang:
+        triang = Delaunay(boxes[:,3:5])
+
+    hull_point_indices = np.unique(triang.convex_hull.flatten())
+    hull_points = np.array([boxes[p] for p in hull_point_indices])
+
+    # plot visualization
+    fig = plt.figure(figsize=(12,9))
+    ax = fig.add_subplot(1, 1, 1)
+    ax.set_ylim(0.0, 1.0)
+    ax.set_xlim(0.0, 1.0)
+    ax.set_xticks(np.array(range(0,convergence_bins + 1))/convergence_bins)
+    ax.set_yticks(np.array(range(0,convergence_bins + 1))/convergence_bins)
+    ax.grid(linestyle='-', color='0.7', zorder=0)
+
+    # plot all points as triangulation
+    ax.triplot(boxes[:,3], boxes[:,4], triang.simplices.copy(), 'b-', lw=1)
+
+    # plot hull and labels
+    ax.plot(hull_points[:,3], hull_points[:,4], color='blue', marker='o', linestyle='None', zorder=10)
+    # for p in hull_points:
+    #     ax.annotate(i, (p[0], p[1] - 0.01), zorder=30, ha="center", va="top", size=9)
+
+    # plot prior generation
+    ax.plot(boxes[-100:,3], boxes[-100:,4], color='yellow', marker='o', linestyle='None', zorder=12)
+
+    # plot chosen parents with proportional circles and label
+    if len(parents) > 0:
+        parent_counter = Counter([tuple(x) for x in parents]) #need tuples because they are hashable
+        unique_parents = np.array([[x[3], x[4], num] for x, num in parent_counter.items()])
+        ax.scatter(unique_parents[:,0], unique_parents[:,1], s=40*unique_parents[:,2], color='orange', marker='o', linestyle='None', zorder=15)
+        for p in unique_parents:
+            x, y, parent_count = p
+            if parent_count > 5:
+                ax.annotate(str(int(parent_count)), (x, y), zorder=30, ha="center", va="center", size=9)
+
+    fig.savefig(output_path)
+    plt.close(fig)
 
 
 def print_block(string):
@@ -67,13 +110,19 @@ def oedipus(config_path):
     run_all_simulations(boxes)
     bins = set(calc_bins(boxes, num_bins))
     print("bins", bins)
-    for gen in range(config['number_of_generations']):
+
+    os.makedirs(config['visualization_output_dir'], exist_ok=True)
+    output_path = os.path.join(config['visualization_output_dir'], "triplot_%d.png" % 0)
+    delaunay_figure(boxes, num_bins, output_path)
+
+    for gen in range(1, config['number_of_generations'] + 1):
         if config['generator_type'] == 'random':
             new_boxes = [[random(), random(), random(), -1.0, -1.0] for _ in range(config['children_per_generation'])]
+            parents = []
         elif config['generator_type'] == 'mutate':
             pass
         elif config['generator_type'] == 'convex_hull':
-            new_boxes = box_generator.convex_hull.new_boxes(gen, config['children_per_generation'],
+            new_boxes, parents = box_generator.convex_hull.new_boxes(gen, config['children_per_generation'],
                         boxes, config['convex_hull'])
         else:
             print("config['generator_type'] NOT FOUND.")
@@ -83,7 +132,9 @@ def oedipus(config_path):
         run_all_simulations(new_boxes)
         bins = bins.union(calc_bins(new_boxes, num_bins))
         boxes = np.append(boxes, new_boxes, axis=0)
-        print(len(boxes), len(new_boxes))
+
+        output_path = os.path.join(config['visualization_output_dir'], "triplot_%d.png" % gen)
+        delaunay_figure(boxes, num_bins, output_path, parents=parents)
 
         # evaluate algorithm effectiveness
         bin_count = len(bins)
