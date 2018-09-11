@@ -66,7 +66,16 @@ def oedipus(config_path):
     next_benchmark = benchmarks.pop(0)
 
     print(config)
-    boxes = np.array([[random(), random(), random(), -1.0, -1.0] for _ in range(config['children_per_generation'])])
+    if config['initial_points'] == "random":
+        boxes = np.array([[random(), random(), random(), -1.0, -1.0] for _ in range(config['children_per_generation'])])
+    elif config['initial_points'] == "dof_combinations":
+        boxes = np.array([[0.0, 0.0, 0.0, -1.0, -1.0], [0.0, 0.0, 1.0, -1.0, -1.0],
+                [0.0, 1.0, 0.0, -1.0, -1.0], [1.0, 0.0, 0.0, -1.0, -1.0], [0.0, 1.0, 1.0, -1.0, -1.0],
+                [1.0, 0.0, 1.0, -1.0, -1.0], [1.0, 1.0, 0.0, -1.0, -1.0], [1.0, 1.0, 1.0, -1.0, -1.0]])
+    else:
+        print("config['initial_points'] type not valid.")
+        return
+
     run_all_simulations(boxes)
     bins = set(calc_bins(boxes, num_bins))
     print("bins", bins)
@@ -75,7 +84,7 @@ def oedipus(config_path):
 
     for gen in range(1, config['number_of_generations'] + 1):
         if config['generator_type'] == 'random':
-            new_boxes = [[random(), random(), random(), -1.0, -1.0] for _ in range(config['children_per_generation'])]
+            new_boxes = np.array([[random(), random(), random(), -1.0, -1.0] for _ in range(config['children_per_generation'])])
             parents = []
         elif config['generator_type'] == 'mutate':
             pass
