@@ -16,7 +16,7 @@ def delaunay_figure(boxes, convergence_bins, output_path, triang=None, children=
     hull_points = np.array([boxes[p] for p in hull_point_indices])
 
     # plot visualization
-    fig = plt.figure(figsize=(12,12))
+    fig = plt.figure(figsize=(12,12), tight_layout=True)
     ax = fig.add_subplot(1, 1, 1)
     ax.set_ylim(0.0, 1.0)
     ax.set_xlim(0.0, 1.0)
