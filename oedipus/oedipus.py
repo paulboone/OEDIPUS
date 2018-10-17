@@ -1,27 +1,15 @@
 
 import os
-# import sys
-# from math import sqrt
 from datetime import datetime
-# from collections import Counter
 import math
 from random import random, seed
 
 import numpy as np
 
-# from sqlalchemy.sql import func, or_
-# from sqlalchemy.orm.exc import FlushError
-# from sqlalchemy.exc import IntegrityError
-# from sqlalchemy.sql import text
-
 import oedipus
 from oedipus.files import load_config_file
 from oedipus.figures import delaunay_figure
-# from oedipus.db import engine, session, Box, MutationStrength
-# from oedipus import simulation
 from oedipus import box_generator
-
-
 
 def print_block(string):
     print('{0}\n{1}\n{0}'.format('=' * 80, string))
