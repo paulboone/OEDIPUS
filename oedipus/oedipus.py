@@ -4,6 +4,7 @@ import os
 # from math import sqrt
 from datetime import datetime
 # from collections import Counter
+import math
 from random import random, seed
 
 import numpy as np
@@ -25,10 +26,25 @@ from oedipus import box_generator
 def print_block(string):
     print('{0}\n{1}\n{0}'.format('=' * 80, string))
 
-def run_all_simulations(boxes):
+def run_all_simulations(boxes, structure_function):
+    if structure_function == "z12":
+        run_simulations_z12(boxes)
+    elif structure_function == "donut":
+        run_simulations_donut(boxes)
+    else:
+        print("config['structure_function'] type not valid.")
+
+def run_simulations_z12(boxes):
     for b in boxes:
         b[3] = (b[0] + b[1]) / 2
         b[4] = b[2] ** 12
+
+def run_simulations_donut(boxes):
+    for b in boxes:
+        angle = math.atan2(b[1] - 0.5, b[0] - 0.5)
+        r = 0.125 + 0.25 * b[2] ** 12
+        b[3] = math.cos(angle) * r + 0.5
+        b[4] = math.sin(angle) * r + 0.5
 
 def calc_bin(value, bound_min, bound_max, bins):
     """Find bin in parameter range.
@@ -66,7 +82,6 @@ def oedipus(config_path):
     next_benchmark = benchmarks.pop(0)
 
     print(config)
-
     if config['initial_points'] == "random":
         if config['initial_points_random_seed']:
             seed(config['initial_points_random_seed'])
@@ -80,7 +95,8 @@ def oedipus(config_path):
         print("config['initial_points'] type not valid.")
         return
 
-    run_all_simulations(boxes)
+    run_all_simulations(boxes, config['structure_function'])
+
     bins = set(calc_bins(boxes, num_bins))
     print("bins", bins)
 
@@ -100,7 +116,7 @@ def oedipus(config_path):
             break
 
         # simulate properties
-        run_all_simulations(new_boxes)
+        run_all_simulations(new_boxes, config['structure_function'])
         new_bins = set(calc_bins(new_boxes, num_bins)) - bins
         bins = bins.union(new_bins)
 

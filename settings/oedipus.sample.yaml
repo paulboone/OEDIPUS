@@ -1,9 +1,21 @@
-generator_type: 'mutate'
-convergence_cutoff_criteria: -0.05
+verbose: true
+generator_type: 'convex_hull'
+initial_points: 'random'
+initial_points_random_seed: 50
+# initial_points: 'dof_combinations'
+
+structure_function: 'donut'
+
+convergence_cutoff_criteria: 0.05
 number_of_convergence_bins: 40
 number_of_generations: 3000
 children_per_generation: 100
-mutate:
-  initial_mutation_strength: 0.2
-  mutation_scheme: 'hybrid_adaptive'
-  selection_scheme: 'smallest_bin'
+benchmarks: [0.25, 0.5, 0.75, 0.90, 1.0]
+visualization_output_dir: "output-donut"
+
+convex_hull:
+  mutation_strength: 0.2
+  fraction_hull: 0.0
+  # mutate_method: 'random_all'
+  mutate_method: 'random_one_dof'
+  perturbation_method: 'unweighted'
