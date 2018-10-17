@@ -4,7 +4,7 @@ import os
 # from math import sqrt
 from datetime import datetime
 # from collections import Counter
-from random import random
+from random import random, seed
 
 import numpy as np
 
@@ -66,8 +66,12 @@ def oedipus(config_path):
     next_benchmark = benchmarks.pop(0)
 
     print(config)
+
     if config['initial_points'] == "random":
+        if config['initial_points_random_seed']:
+            seed(config['initial_points_random_seed'])
         boxes = np.array([[random(), random(), random(), -1.0, -1.0] for _ in range(config['children_per_generation'])])
+        seed() # flush the seed so that only the initial points are set, not generated points
     elif config['initial_points'] == "dof_combinations":
         boxes = np.array([[0.0, 0.0, 0.0, -1.0, -1.0], [0.0, 0.0, 1.0, -1.0, -1.0],
                 [0.0, 1.0, 0.0, -1.0, -1.0], [1.0, 0.0, 0.0, -1.0, -1.0], [0.0, 1.0, 1.0, -1.0, -1.0],
