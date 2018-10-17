@@ -31,6 +31,8 @@ def run_all_simulations(boxes, structure_function):
         run_simulations_z12(boxes)
     elif structure_function == "donut":
         run_simulations_donut(boxes)
+    elif structure_function == "inverse_donut":
+        run_simulations_inverse_donut(boxes)
     else:
         print("config['structure_function'] type not valid.")
 
@@ -45,6 +47,14 @@ def run_simulations_donut(boxes):
         r = 0.125 + 0.25 * b[2] ** 12
         b[3] = math.cos(angle) * r + 0.5
         b[4] = math.sin(angle) * r + 0.5
+
+def run_simulations_inverse_donut(boxes):
+    for b in boxes:
+        angle = math.atan2(b[1] - 0.5, b[0] - 0.5)
+        r = 0.375 - 0.25 * b[2] ** 12
+        b[3] = math.cos(angle) * r + 0.5
+        b[4] = math.sin(angle) * r + 0.5
+
 
 def calc_bin(value, bound_min, bound_max, bins):
     """Find bin in parameter range.
@@ -75,6 +85,11 @@ def oedipus(config_path):
     config = load_config_file(config_path)
     num_bins = config['number_of_convergence_bins']
     run_id = datetime.now().isoformat()
+    structure_function = config['structure_function']
+    figure_guides = ""
+    if structure_function in ['donut', 'inverse_donut']:
+        figure_guides = "donut"
+
     print('{:%Y-%m-%d %H:%M:%S}'.format(datetime.now()))
 
     verbose = config['verbose'] if 'verbose' in config else False
@@ -95,7 +110,7 @@ def oedipus(config_path):
         print("config['initial_points'] type not valid.")
         return
 
-    run_all_simulations(boxes, config['structure_function'])
+    run_all_simulations(boxes, structure_function)
 
     bins = set(calc_bins(boxes, num_bins))
     print("bins", bins)
@@ -116,9 +131,10 @@ def oedipus(config_path):
             break
 
         # simulate properties
-        run_all_simulations(new_boxes, config['structure_function'])
+        run_all_simulations(new_boxes, structure_function)
         new_bins = set(calc_bins(new_boxes, num_bins)) - bins
         bins = bins.union(new_bins)
+
 
         output_path = os.path.join(config['visualization_output_dir'], "triplot_%d.png" % gen)
         delaunay_figure(boxes, num_bins, output_path, children=new_boxes, parents=parents,
@@ -126,7 +142,7 @@ def oedipus(config_path):
                         title="Generation %d: %d/%d (+%d) %5.2f%% (+%5.2f %%)" %
                             (gen, len(bins), num_bins ** 2, len(new_bins),
                             100*float(len(bins)) / num_bins ** 2, 100*float(len(new_bins)) / num_bins ** 2 ),
-                        patches=config['structure_function'])
+                        patches=figure_guides)
 
 
 
