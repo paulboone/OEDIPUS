@@ -16,6 +16,9 @@ def perturb_length(x, mutation_strength, perturbation_method):
             return x + x * fraction
         else:
             return x + (1 - x) * fraction
+    elif perturbation_method=="wrapped":
+        fraction = choice([-mutation_strength, mutation_strength]) * random()
+        return (x + fraction) % 1.0
 
 def mutate_box_random_all(parent_box, mutation_strength, perturbation_method):
     return ([
