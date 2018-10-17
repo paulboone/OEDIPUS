@@ -109,7 +109,8 @@ def oedipus(config_path):
                         bins=bins, new_bins=new_bins,
                         title="Generation %d: %d/%d (+%d) %5.2f%% (+%5.2f %%)" %
                             (gen, len(bins), num_bins ** 2, len(new_bins),
-                            100*float(len(bins)) / num_bins ** 2, 100*float(len(new_bins)) / num_bins ** 2 ))
+                            100*float(len(bins)) / num_bins ** 2, 100*float(len(new_bins)) / num_bins ** 2 ),
+                        patches=config['structure_function'])
 
 
 

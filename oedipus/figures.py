@@ -2,12 +2,12 @@ from collections import Counter
 
 import matplotlib.pyplot as plt
 from matplotlib.collections import PatchCollection
-from matplotlib.patches import Rectangle
+from matplotlib.patches import Rectangle, Circle
 import numpy as np
 from scipy.spatial import Delaunay
 
 def delaunay_figure(boxes, convergence_bins, output_path, triang=None, children=[], parents=[],
-                    bins=[], new_bins=[], title=""):
+                    bins=[], new_bins=[], title="", patches=None):
 
     if not triang:
         triang = Delaunay(boxes[:,3:5])
@@ -54,6 +54,10 @@ def delaunay_figure(boxes, convergence_bins, output_path, triang=None, children=
             x, y, parent_count = p
             if parent_count > 5:
                 ax.annotate(str(int(parent_count)), (x, y), zorder=30, ha="center", va="center", size=9)
+
+    if patches == "donut":
+        ax.add_patch(Circle((0.5, 0.5), 0.125, fill=False, linestyle="dashed", linewidth=1, zorder=50))
+        ax.add_patch(Circle((0.5, 0.5), 0.375, fill=False, linestyle="dashed", linewidth=2, zorder=50))
 
     ax.set_title(title)
     fig.savefig(output_path)
