@@ -33,23 +33,6 @@ def mutate_box_random_one_dof(parent_box, mutation_strength, perturbation_method
     child[dof] = perturb_length(child[dof], mutation_strength, perturbation_method)
     return child
 
-
-# def choose_parents_hull(triang, box_range, num_parents):
-#     hull_point_indices = np.unique(triang.convex_hull.flatten())
-#
-#     # choose parents
-#     point_weights = {i:0.0 for i in hull_point_indices}
-#     total_weight = 0.0
-#     for edge in triang.convex_hull:
-#         distance = np.sqrt(np.sum((box_range[edge[0]] - box_range[edge[1]]) ** 2))
-#         point_weights[edge[0]] += distance
-#         point_weights[edge[1]] += distance
-#         total_weight += 2 * distance
-#
-#     point_weights = {k:point_weights[k] / total_weight for k in point_weights}
-#     parent_indices = choice(list(point_weights.keys()), num_parents, p=list(point_weights.values()))
-#     return list(parent_indices)
-
 def choose_parents_hull(triang, box_range, num_parents):
     hull_point_indices = np.unique(triang.convex_hull.flatten())
 
