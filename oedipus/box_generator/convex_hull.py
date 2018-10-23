@@ -90,20 +90,25 @@ def choose_parents_simplices(triang, box_range, num_parents, num_best_triangles)
     return parent_indices
 
 
-def choose_parents(num_parents, boxes, fraction_hull):
-    # calculate convex hull
+def choose_parents(num_parents, boxes, simplices_or_hull):
     box_range = boxes[:,3:5]
     triang = Delaunay(box_range)
-    hull_parents = round(fraction_hull * num_parents)
-    parent_indices = choose_parents_hull(triang, box_range, hull_parents)
-    # parent_indices = choose_parents_simplices(triang, box_range, num_parents - hull_parents, num_parents)
+    if simplices_or_hull == 'simplices':
+        parent_indices = choose_parents_simplices(triang, box_range, num_parents, num_parents)
+    elif simplices_or_hull == 'hull':
+        parent_indices = choose_parents_hull(triang, box_range, num_parents)
+    else:
+        raise(Exception("simplices_or_hull must be defined as 'simplices' or 'hull'"))
+
     return [boxes[i] for i in parent_indices]
 
 
 def new_boxes(gen, children_per_generation, boxes, config={}):
     mutation_strength = config['mutation_strength']
     perturbation_method = config['perturbation_method']
-    parents = choose_parents(children_per_generation, boxes, config['fraction_hull'])
+
+
+    parents = choose_parents(children_per_generation, boxes, config['simplices_or_hull'])
     if config['mutate_method'] == "random_all":
         children = np.array([mutate_box_random_all(p, mutation_strength, perturbation_method) for p in parents])
     elif config['mutate_method'] == "random_one_dof":

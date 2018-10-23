@@ -4,18 +4,17 @@ initial_points: 'random'
 initial_points_random_seed: 50
 # initial_points: 'dof_combinations'
 
-structure_function: 'donut'
+structure_function: 'z12'
 
-convergence_cutoff_criteria: 0.05
 number_of_convergence_bins: 40
 number_of_generations: 3000
 children_per_generation: 100
 benchmarks: [0.25, 0.5, 0.75, 0.90, 1.0]
-visualization_output_dir: "output-donut"
+visualization_output_dir: "output"
 
 convex_hull:
   mutation_strength: 0.2
-  fraction_hull: 0.0
+  simplices_or_hull: 'hull'
   # mutate_method: 'random_all'
   mutate_method: 'random_one_dof'
-  perturbation_method: 'unweighted'
+  perturbation_method: 'wrapped'
