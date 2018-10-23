@@ -6,7 +6,6 @@ from random import random, seed
 
 import numpy as np
 
-import oedipus
 from oedipus.files import load_config_file
 from oedipus.figures import delaunay_figure
 from oedipus import box_generator
