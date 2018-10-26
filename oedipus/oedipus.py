@@ -16,6 +16,8 @@ def print_block(string):
 def run_all_simulations(boxes, structure_function):
     if structure_function == "z12":
         run_simulations_z12(boxes)
+    elif structure_function == "norm":
+        run_simulations_norm(boxes)
     elif structure_function == "donut":
         run_simulations_donut(boxes)
     elif structure_function == "inverse_donut":
@@ -23,10 +25,16 @@ def run_all_simulations(boxes, structure_function):
     else:
         print("config['structure_function'] type not valid.")
 
+def run_simulations_norm(boxes):
+    f = lambda x:((math.e**(-((x - 0.01) / math.sqrt(0.001))**2 /2) / math.sqrt(2 * math.pi)) * (1/math.sqrt(0.01))) / 8
+    for b in boxes:
+        b[3] = (b[0] + b[1]) / 2
+        b[4] = f(b[2])
+
 def run_simulations_z12(boxes):
     for b in boxes:
         b[3] = (b[0] + b[1]) / 2
-        b[4] = b[2] ** 12
+        b[4] = (b[2]) ** 12
 
 def run_simulations_donut(boxes):
     for b in boxes:
