@@ -21,7 +21,7 @@ def perturb_length(x, mutation_strength, perturbation_method):
         return (x + fraction) % 1.0
 
 def mutate_box_random_all(parent_box, mutation_strength, perturbation_method):
-    return ([perturb_length(parent_box[i], mutation_strength, perturbation_method) for i in len(parent_box)])
+    return ([perturb_length(dof, mutation_strength, perturbation_method) for dof in parent_box])
 
 def mutate_box_random_one_dof(parent_box, mutation_strength, perturbation_method):
     child = np.copy(parent_box)
