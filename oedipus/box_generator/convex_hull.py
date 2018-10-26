@@ -21,15 +21,11 @@ def perturb_length(x, mutation_strength, perturbation_method):
         return (x + fraction) % 1.0
 
 def mutate_box_random_all(parent_box, mutation_strength, perturbation_method):
-    return ([
-        perturb_length(parent_box[0], mutation_strength, perturbation_method),
-        perturb_length(parent_box[1], mutation_strength, perturbation_method),
-        perturb_length(parent_box[2], mutation_strength, perturbation_method),
-        -1.0, -1.0])
+    return ([perturb_length(parent_box[i], mutation_strength, perturbation_method) for i in len(parent_box)])
 
 def mutate_box_random_one_dof(parent_box, mutation_strength, perturbation_method):
-    child = [parent_box[0], parent_box[1], parent_box[2], -1.0, -1.0]
-    dof = choice([0,1,2])
+    child = np.copy(parent_box)
+    dof = choice(len(parent_box))
     child[dof] = perturb_length(child[dof], mutation_strength, perturbation_method)
     return child
 
@@ -73,8 +69,7 @@ def choose_parents_simplices(triang, box_range, num_parents, num_best_triangles)
     return parent_indices
 
 
-def choose_parents(num_parents, boxes, simplices_or_hull):
-    box_range = boxes[:,3:5]
+def choose_parents(num_parents, box_d, box_range, simplices_or_hull):
     triang = Delaunay(box_range)
     if simplices_or_hull == 'simplices':
         parent_indices = choose_parents_simplices(triang, box_range, num_parents, num_parents)
@@ -83,21 +78,20 @@ def choose_parents(num_parents, boxes, simplices_or_hull):
     else:
         raise(Exception("simplices_or_hull must be defined as 'simplices' or 'hull'"))
 
-    return [boxes[i] for i in parent_indices]
+    return [box_d[i] for i in parent_indices], [box_range[i] for i in parent_indices]
 
 
-def new_boxes(gen, children_per_generation, boxes, config={}):
+def new_boxes(gen, children_per_generation, box_d, box_r, config={}):
     mutation_strength = config['mutation_strength']
     perturbation_method = config['perturbation_method']
 
-
-    parents = choose_parents(children_per_generation, boxes, config['simplices_or_hull'])
+    parents_d, parents_r = choose_parents(children_per_generation, box_d, box_r, config['simplices_or_hull'])
     if config['mutate_method'] == "random_all":
-        children = np.array([mutate_box_random_all(p, mutation_strength, perturbation_method) for p in parents])
+        children = np.array([mutate_box_random_all(p, mutation_strength, perturbation_method) for p in parents_d])
     elif config['mutate_method'] == "random_one_dof":
-        children = np.array([mutate_box_random_one_dof(p, mutation_strength, perturbation_method) for p in parents])
+        children = np.array([mutate_box_random_one_dof(p, mutation_strength, perturbation_method) for p in parents_d])
     else:
         raise(Exception("Please add a mutate_method to the config"))
 
 
-    return children, parents
+    return children, parents_d, parents_r

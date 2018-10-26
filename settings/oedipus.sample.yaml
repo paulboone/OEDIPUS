@@ -4,6 +4,7 @@ initial_points: 'random'
 initial_points_random_seed: 50
 # initial_points: 'dof_combinations'
 
+degrees_of_freedom: 3
 structure_function: 'z12'
 
 number_of_convergence_bins: 40
@@ -14,7 +15,7 @@ visualization_output_dir: "output"
 
 convex_hull:
   mutation_strength: 0.2
-  simplices_or_hull: 'hull'
+  simplices_or_hull: 'simplices'
   # mutate_method: 'random_all'
   mutate_method: 'random_one_dof'
   perturbation_method: 'wrapped'
