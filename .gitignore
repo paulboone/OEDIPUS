@@ -4,3 +4,4 @@ settings/*
 *.ipynb
 *.db
 *.db-journal
+/output*
