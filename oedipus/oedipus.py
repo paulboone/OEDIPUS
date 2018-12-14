@@ -13,7 +13,7 @@ from oedipus import box_generator
 def print_block(string):
     print('{0}\n{1}\n{0}'.format('=' * 80, string))
 
-def run_all_simulations(box_d, structure_function):
+def run_all_simulations(box_d, structure_function, dofs, config={}):
     if structure_function == "z12":
         return run_simulations_z12(box_d)
     elif structure_function == "norm":
@@ -22,6 +22,8 @@ def run_all_simulations(box_d, structure_function):
         return run_simulations_donut(box_d)
     elif structure_function == "inverse_donut":
         return run_simulations_inverse_donut(box_d)
+    elif structure_function == "meanxz":
+        return run_simulations_meanxz(box_d, dofs, config)
     else:
         print("config['structure_function'] type not valid.")
 
@@ -38,6 +40,14 @@ def run_simulations_z12(box_d):
     for i, b in enumerate(box_d):
         box_r[i][0] = (b[0] + b[1]) / 2
         box_r[i][1] = (b[2]) ** 12
+    return box_r
+
+def run_simulations_meanxz(box_d, dofs, config):
+    xdofs = config['xdofs']
+    print(xdofs, dofs, box_d.shape)
+    box_r = -1 * np.ones((len(box_d), 2))
+    box_r[:,0] = box_d[:,0:xdofs].mean(axis=1)
+    box_r[:,1] = box_d[:,xdofs:dofs].mean(axis=1)
     return box_r
 
 def run_simulations_donut(box_d):
@@ -91,6 +101,8 @@ def oedipus(config_path):
 
     dofs = config['degrees_of_freedom']
     structure_function = config['structure_function']
+    structure_function_config = config[structure_function]
+
     figure_guides = ""
     if structure_function in ['donut', 'inverse_donut']:
         figure_guides = "donut"
@@ -116,7 +128,7 @@ def oedipus(config_path):
         print("config['initial_points'] type not valid.")
         return
 
-    box_r = run_all_simulations(box_d, structure_function)
+    box_r = run_all_simulations(box_d, structure_function, dofs, structure_function_config)
 
     bins = set(calc_bins(box_r, num_bins))
     print("bins", bins)
@@ -137,7 +149,7 @@ def oedipus(config_path):
             break
 
         # simulate properties
-        new_box_r = run_all_simulations(new_box_d, structure_function)
+        new_box_r = run_all_simulations(new_box_d, structure_function, dofs, structure_function_config)
         new_bins = set(calc_bins(new_box_r, num_bins)) - bins
         bins = bins.union(new_bins)
 
