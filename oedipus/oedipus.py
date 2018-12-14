@@ -135,7 +135,7 @@ def oedipus(config_path):
 
     os.makedirs(config['visualization_output_dir'], exist_ok=True)
 
-    for gen in range(1, config['number_of_generations'] + 1):
+    for gen in range(1, config['max_generations'] + 1):
         if config['generator_type'] == 'random':
             new_box_d = np.random.rand(config['children_per_generation'], dofs)
             parents_d = parents_r = []
