@@ -2,7 +2,6 @@
 import os
 from datetime import datetime
 import math
-from random import random, seed
 
 import numpy as np
 
@@ -116,11 +115,12 @@ def oedipus(config_path):
     print(config)
     if config['initial_points'] == "random":
         if config['initial_points_random_seed']:
-            seed(config['initial_points_random_seed'])
+            print("applying random seed to initial points: %d" % config['initial_points_random_seed'])
+            np.random.seed(config['initial_points_random_seed'])
 
         box_d = np.random.rand(config['children_per_generation'], dofs)
         box_r = -1 * np.ones((config['children_per_generation'], 2))
-        seed() # flush the seed so that only the initial points are set, not generated points
+        np.random.seed() # flush the seed so that only the initial points are set, not generated points
     elif config['initial_points'] == "dof_combinations":
         box_d = np.array(itertools.product([0.0,1.0], repeat=dofs))
         box_r = -1 * np.ones((len(box_d), 2))
