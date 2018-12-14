@@ -20,13 +20,11 @@ def perturb_length(x, mutation_strength, perturbation_method):
         fraction = choice([-mutation_strength, mutation_strength]) * random()
         return (x + fraction) % 1.0
 
-def mutate_box_random_all(parent_box, mutation_strength, perturbation_method):
-    return ([perturb_length(dof, mutation_strength, perturbation_method) for dof in parent_box])
-
-def mutate_box_random_one_dof(parent_box, mutation_strength, perturbation_method):
+def mutate_box_random(parent_box, mutation_strength, perturbation_method, num_dofs):
     child = np.copy(parent_box)
-    dof = choice(len(parent_box))
-    child[dof] = perturb_length(child[dof], mutation_strength, perturbation_method)
+    mutate_dofs = choice(len(parent_box), num_dofs, replace=False)
+    for dof in mutate_dofs:
+        child[dof] = perturb_length(child[dof], mutation_strength, perturbation_method)
     return child
 
 def choose_parents_hull(triang, box_range, num_parents):
@@ -84,14 +82,9 @@ def choose_parents(num_parents, box_d, box_range, simplices_or_hull):
 def new_boxes(gen, children_per_generation, box_d, box_r, config={}):
     mutation_strength = config['mutation_strength']
     perturbation_method = config['perturbation_method']
+    num_dofs = config['num_dofs_to_mutate']
 
     parents_d, parents_r = choose_parents(children_per_generation, box_d, box_r, config['simplices_or_hull'])
-    if config['mutate_method'] == "random_all":
-        children = np.array([mutate_box_random_all(p, mutation_strength, perturbation_method) for p in parents_d])
-    elif config['mutate_method'] == "random_one_dof":
-        children = np.array([mutate_box_random_one_dof(p, mutation_strength, perturbation_method) for p in parents_d])
-    else:
-        raise(Exception("Please add a mutate_method to the config"))
-
+    children = np.array([mutate_box_random(p, mutation_strength, perturbation_method, num_dofs) for p in parents_d])
 
     return children, parents_d, parents_r
