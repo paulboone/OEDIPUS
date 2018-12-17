@@ -43,7 +43,6 @@ def run_simulations_z12(box_d):
 
 def run_simulations_meanxz(box_d, dofs, config):
     xdofs = config['xdofs']
-    print(xdofs, dofs, box_d.shape)
     box_r = -1 * np.ones((len(box_d), 2))
     box_r[:,0] = box_d[:,0:xdofs].mean(axis=1)
     box_r[:,1] = box_d[:,xdofs:dofs].mean(axis=1)
@@ -133,6 +132,7 @@ def oedipus(config_path):
     bins = set(calc_bins(box_r, num_bins))
     print("bins", bins)
 
+    last_benchmark_reached = False
     os.makedirs(config['visualization_output_dir'], exist_ok=True)
 
     for gen in range(1, config['max_generations'] + 1):
@@ -153,17 +153,6 @@ def oedipus(config_path):
         new_bins = set(calc_bins(new_box_r, num_bins)) - bins
         bins = bins.union(new_bins)
 
-        output_path = os.path.join(config['visualization_output_dir'], "triplot_%d.png" % gen)
-        delaunay_figure(box_r, num_bins, output_path, children=new_box_r, parents=parents_r,
-                        bins=bins, new_bins=new_bins,
-                        title="Generation %d: %d/%d (+%d) %5.2f%% (+%5.2f %%)" %
-                            (gen, len(bins), num_bins ** 2, len(new_bins),
-                            100*float(len(bins)) / num_bins ** 2, 100*float(len(new_bins)) / num_bins ** 2 ),
-                        patches=figure_guides)
-
-        box_d = np.append(box_d, new_box_d, axis=0)
-        box_r = np.append(box_r, new_box_r, axis=0)
-
         # evaluate algorithm effectiveness
         bin_count = len(bins)
         bin_fraction_explored = bin_count / num_bins ** 2
@@ -175,5 +164,20 @@ def oedipus(config_path):
             if benchmarks:
                 next_benchmark = benchmarks.pop(0)
             else:
-                print("Last benchmark reached")
-                break
+                last_benchmark_reached = True
+
+        if gen <= 10 or (gen <=50 and gen % 10 == 0) or (gen <=500 and gen % 50 == 0) or \
+            gen % 100 == 0 or last_benchmark_reached:
+            output_path = os.path.join(config['visualization_output_dir'], "triplot_%d.png" % gen)
+            delaunay_figure(box_r, num_bins, output_path, children=new_box_r, parents=parents_r,
+                            bins=bins, new_bins=new_bins,
+                            title="Generation %d: %d/%d (+%d) %5.2f%% (+%5.2f %%)" %
+                                (gen, len(bins), num_bins ** 2, len(new_bins),
+                                100*float(len(bins)) / num_bins ** 2, 100*float(len(new_bins)) / num_bins ** 2 ),
+                            patches=figure_guides)
+
+        box_d = np.append(box_d, new_box_d, axis=0)
+        box_r = np.append(box_r, new_box_r, axis=0)
+
+        if last_benchmark_reached:
+            break
